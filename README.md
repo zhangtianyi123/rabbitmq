@@ -1,6 +1,5 @@
 # RabbitMQ
 
-
 ---
 
 ## 消息丢失问题
@@ -104,9 +103,29 @@ public class AutoNoCatchService {
 	</rabbit:listener-container>
 ```
 
+### manual模式下-无tryCatch处理-处理后手动ack-脏数据
 
+- 配置启用
+ - ack包的启动类配置文件指向ack/amqp-consume-manualack
+ - ack包监听类MessageManualHandler装配的服务为AutoNoCatchService
 
+手动ack，可以灵活的确定执行的策略，ack的位置。因为在ack之前发生了空指针异常，脏数据也无法被ack
 
+```
+public class MessageManualHandler implements ChannelAwareMessageListener {
+
+	@Autowired
+	private AutoNoCatchService chooseOneService;
+	
+	public void onMessage(Message message, Channel channel) throws Exception {
+		//调用业务方法
+		
+		//手动在处理完以后发送ack
+		channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+	}
+
+```
+ 
 
 
 

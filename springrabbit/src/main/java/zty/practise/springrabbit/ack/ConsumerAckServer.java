@@ -18,7 +18,10 @@ public class ConsumerAckServer {
 //		String path = "classpath:ack/amqp-consume-autoack.xml";
 		
 		//noneAck
-		String path = "classpath:ack/amqp-consume-noneack.xml";
+//		String path = "classpath:ack/amqp-consume-noneack.xml";
+		
+		//manualack
+		String path = "classpath:ack/amqp-consume-manualack.xml";
 		
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(path);
 		
