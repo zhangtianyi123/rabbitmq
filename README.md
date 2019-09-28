@@ -1,10 +1,9 @@
 # RabbitMQ
 
-标签（空格分隔）： 消息队列
 
 ---
 
-### 消息丢失问题
+## 消息丢失问题
 
 验证消息丢失的一种方法：利用消息队列的有序性，在生产端，每个发出的消息附加一个连续递增的序号，然后再消费端验证序号的连续性 （前提是不破坏有序性）
 
@@ -36,11 +35,18 @@ if (action == Action.ACCEPT) {
 /*channel.basicNack与 channel.basicReject的区别在于basicNack可以拒绝多条消息，而basicReject一次只能拒绝一条消息*/
 ```
 
+<br />
+### auto模式下-tryCatch处理-脏数据
+
+- 配置启用
+ - ack包的启动类配置文件指向ack/amqp-consume-autoack
+ - ack包监听类MessageHandler装配的服务为AutoAndCatchService
+
 当生产者发出脏数据时（lotName=null）,消费者try-catch了业务代码，那么即时针对空指针的操作，也不会抛出NPE,在消费端的业务执行是失败的，但是auto模式并bucare,由于catch不会抛出异常，那么也就能正常ack.
 
 ```
 @Service
-public class AutoNoCatchService {
+public class AutoAndCatchService {
 	public ResponseEntity doPressureTest(RequestEntity entity) {
 		ResponseEntity retParams = new ResponseEntity();
 		try {
@@ -56,11 +62,18 @@ public class AutoNoCatchService {
 }
 ```
 
+<br/>
+### auto模式下-无tryCatch处理-脏数据 
+
+- 配置启用
+ - ack包的启动类配置文件指向ack/amqp-consume-autoack
+ - ack包监听类MessageHandler装配的服务为AutoNoCatchService
+
 当生产者发出脏数据时（lotName=null），消费者没有try-catch业务代码，业务处理过程中由于空指针会抛出运行时异常，将会导致这一个脏数据一直无法被消费，阻塞队列
 
 ```
 @Service
-public class AutoAndCatchService {
+public class AutoNoCatchService {
 	public ResponseEntity doPressureTest(RequestEntity entity) {
 		ResponseEntity retParams = new ResponseEntity();
 		
@@ -74,7 +87,23 @@ public class AutoAndCatchService {
 
 }
 ```
- 
+
+### none模式下-无tryCatch处理-脏数据  
+- 配置启用
+ - ack包的启动类配置文件指向ack/amqp-consume-noneack
+ - ack包监听类MessageHandler装配的服务为AutoNoCatchService
+
+虽然未捕获异常，脏数据又会导致导致空指针异常，但是none模式下，相当于放弃了ack机制，不会阻塞队列，但是也会丢失消息
+结果就是可以看到一路报错一路消费
+
+```
+	<rabbit:listener-container
+		connection-factory="connectionFactory" acknowledge="none" message-converter="jsonMessageConverter">
+		<rabbit:listener ref="messageHandler" method="handleMessage"
+			queue-names="${requestQueue}" />
+	</rabbit:listener-container>
+```
+
 
 
 
