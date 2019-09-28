@@ -10,6 +10,8 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import zty.practise.springrabbit.model.RequestEntity;
+
 @Component("serverSendManager")
 public class ServerSendManager {
 	

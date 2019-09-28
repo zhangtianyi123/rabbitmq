@@ -1,4 +1,4 @@
-package zty.practise.springrabbit.produce;
+package zty.practise.springrabbit.model;
 
 public class RequestEntity {
 
