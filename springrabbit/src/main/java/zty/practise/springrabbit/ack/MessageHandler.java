@@ -16,11 +16,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import zty.practise.springrabbit.model.RequestEntity;
 import zty.practise.springrabbit.model.ResponseEntity;
 
+/**
+ * 通过注释自动装配的Service,只保留一个，来调用不同的消费逻辑
+ * 
+ * @author zhangtianyi
+ *
+ */
 @Component("messageHandler")
 public class MessageHandler implements MessageListener {
 	
+//	@Autowired
+//	private AutoAndCatchService chooseOneService;
+	
 	@Autowired
-	private AutoAndCatchService autoAndCatchService;
+	private AutoNoCatchService chooseOneService;
 
 	public void onMessage(Message message) {
 		String body = "";
@@ -44,7 +53,7 @@ public class MessageHandler implements MessageListener {
 		}
 		
 		//调用业务方法
-		ResponseEntity response = autoAndCatchService.doPressureTest(requestEntity);
+		ResponseEntity response = chooseOneService.doPressureTest(requestEntity);
 	}
 	
 }

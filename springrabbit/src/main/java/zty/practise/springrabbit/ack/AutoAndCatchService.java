@@ -10,7 +10,7 @@ import zty.practise.springrabbit.model.RequestEntity;
 import zty.practise.springrabbit.model.ResponseEntity;
 import zty.practise.springrabbit.produce.ServerSendManager;
 
-@Service("autoAndCatchService")
+@Service
 public class AutoAndCatchService {
 	
 	private Logger logger = LoggerFactory.getLogger(AutoAndCatchService.class);
