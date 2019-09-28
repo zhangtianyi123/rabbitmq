@@ -2,6 +2,7 @@ package zty.practise.springrabbit.produce;
 
 import java.time.LocalDateTime;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -20,13 +21,15 @@ public class ServerSendManager {
 	@Autowired
 	private AmqpTemplate amqpTemplate;
 	
+	private static long count = 0;
+	
 	public void sendMessage() {
 		try {
 			 RequestEntity entity = new RequestEntity();
 			 entity.setEventName(LocalDateTime.now().toString());
-			 entity.setLotName("FZ20190308X01");
-			 entity.setProcName("PRESSURETEST");
-			 entity.setReqId("requestQueue_threads-223_0000113_45118");
+			 entity.setLotName(RandomStringUtils.randomNumeric(5));
+			 entity.setProcName(RandomStringUtils.randomAscii(5));
+			 entity.setReqId((count++) + "");
 			 amqpTemplate.convertAndSend(entity);
 			 logger.info("send message...");
 		} catch (Exception e) {
