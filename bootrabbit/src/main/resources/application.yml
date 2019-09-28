@@ -5,6 +5,10 @@ spring:
     username: zhangtianyi
     password: zhangtianyi
     virtual-host: vhost_test01
+    listener:
+      simple: 
+        acknowledge-mode: manual
+      
     
 rabbitmq:
   requestQueue: requestQueue

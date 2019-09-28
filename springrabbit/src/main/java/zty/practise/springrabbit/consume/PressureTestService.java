@@ -4,16 +4,19 @@ import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import zty.practise.springrabbit.model.RequestEntity;
 import zty.practise.springrabbit.model.ResponseEntity;
-import zty.practise.springrabbit.produce.ServerSendManager;
 
 @Service("pressureTestService")
 public class PressureTestService {
 	
 	private Logger logger = LoggerFactory.getLogger(PressureTestService.class);
+	
+	@Autowired
+	private PressureTestService pressureTestService;
 	
 	public ResponseEntity doPressureTest(RequestEntity entity) {
 		// 获取开始时间
