@@ -1,6 +1,9 @@
 package zty.practise.bootrabbit.produce;
 
 
+import java.time.LocalDateTime;
+
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+import zty.practise.bootrabbit.model.RequestEntity;
 
 @Service("amqpSender")
 @Slf4j
@@ -26,7 +30,12 @@ public class AmqpSender {
 	
 	@Scheduled(fixedRate = 3000)
     public void send() {
-        this.rabbitTemplate.convertAndSend(exchangeName, routingKey, (count++) + "");
+		 RequestEntity entity = new RequestEntity();
+		 entity.setEventName(LocalDateTime.now().toString());
+		 entity.setLotName(RandomStringUtils.randomNumeric(5));
+		 entity.setProcName(RandomStringUtils.randomAscii(5));
+		 entity.setReqId((count++) + "");
+        this.rabbitTemplate.convertAndSend(exchangeName, routingKey, entity);
         log.info("send message...");
     }
 }
