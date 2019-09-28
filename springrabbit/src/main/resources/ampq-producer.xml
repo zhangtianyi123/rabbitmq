@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:component-scan base-package="com.test.rabbit.producer.server" />
+
+	<rabbit:connection-factory id="connectionFactory"
+		host="${rmq.url}" port="${rmq.port}" username="${rmq.username}"
+		password="${rmq.password}" virtual-host="${rmq.vhost}" />
+	
+	<bean id="jackson2JsonMessageConverter" class="org.springframework.amqp.support.converter.Jackson2JsonMessageConverter"/>  
+
+	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory"
+		message-converter="jackson2JsonMessageConverter" routing-key="${requestQueue}" />
+
+	<bean id="serverSendManager" class="zty.practise.springrabbit.produce.ServerSendManager">
+	</bean>
+	
+	<task:scheduled-tasks>
+		<task:scheduled ref="serverSendManager" method="sendMessage"
+			fixed-delay="3000"  />
+	</task:scheduled-tasks>
+
+</beans>
