@@ -23,12 +23,33 @@ public class ServerSendManager {
 	
 	private static long count = 0;
 	
+	/**
+	 * 发送正常的消息
+	 * 在amqp-producer中定时任务调度
+	 */
 	public void sendMessage() {
 		try {
 			 RequestEntity entity = new RequestEntity();
 			 entity.setEventName(LocalDateTime.now().toString());
 			 entity.setLotName(RandomStringUtils.randomNumeric(5));
 			 entity.setProcName(RandomStringUtils.randomAscii(5));
+			 entity.setReqId((count++) + "");
+			 amqpTemplate.convertAndSend(entity);
+			 logger.info("send message...");
+		} catch (Exception e) {
+		}
+	}
+	
+	/**
+	 * 发送错误消息，脏数据，以测试消费
+	 * 在amqp-producer中定时任务调度
+	 */
+	public void sendErrorMessage() {
+		try {
+			 RequestEntity entity = new RequestEntity();
+			 entity.setEventName(LocalDateTime.now().toString());
+			 entity.setLotName(null);
+			 entity.setProcName(null);
 			 entity.setReqId((count++) + "");
 			 amqpTemplate.convertAndSend(entity);
 			 logger.info("send message...");

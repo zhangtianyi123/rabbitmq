@@ -7,7 +7,7 @@
 		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
-	<context:component-scan base-package="zty.practise.springrabbit"/>
+	<context:component-scan base-package="zty.practise.springrabbit.produce"/>
 
 	<rabbit:connection-factory id="connectionFactory"
 		host="${rmq.url}" port="${rmq.port}" username="${rmq.username}"
@@ -21,8 +21,15 @@
 	<bean id="serverSendManager" class="zty.practise.springrabbit.produce.ServerSendManager">
 	</bean>
 	
+	<!-- 发送正常的消息 -->
+<!-- 	<task:scheduled-tasks> -->
+<!-- 		<task:scheduled ref="serverSendManager" method="sendMessage" -->
+<!-- 			fixed-delay="3000"  /> -->
+<!-- 	</task:scheduled-tasks> -->
+
+	<!-- 发送脏消息 -->
 	<task:scheduled-tasks>
-		<task:scheduled ref="serverSendManager" method="sendMessage"
+		<task:scheduled ref="serverSendManager" method="sendErrorMessage"
 			fixed-delay="3000"  />
 	</task:scheduled-tasks>
 
