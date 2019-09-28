@@ -53,7 +53,16 @@ public class MessageManualHandler implements ChannelAwareMessageListener {
 		ResponseEntity response = chooseOneService.doPressureTest(requestEntity);
 		
 		//手动在处理完以后发送ack
-		channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+//		channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+		
+		//消息重新入队
+//		boolean requeue = true;
+//		channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, requeue);
+		
+		//拒绝丢弃消息
+		boolean reject = false;
+		channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, reject);
+		
 	}
 
 }
