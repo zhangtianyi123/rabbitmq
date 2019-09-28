@@ -1,0 +1,15 @@
+spring:
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: zhangtianyi
+    password: zhangtianyi
+    virtual-host: vhost_test01
+    
+rabbitmq:
+  requestQueue: requestQueue
+  responseQueue: responseQueue
+  requestExchange: requestExchange
+  requestRoutingkey: request
+    
+  
