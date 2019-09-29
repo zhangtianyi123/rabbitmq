@@ -5,9 +5,18 @@ spring:
     username: zhangtianyi
     password: zhangtianyi
     virtual-host: vhost_test01
+    connection-timeout: 0
     listener:
+      # type: simple
+      prefetch: 80
+      concurrency: 2
       simple: 
+        # default-requeue-rejected: false
         acknowledge-mode: manual
+        # retry:
+          # max-attempts: 5
+          # enabled: true
+          # initial-interval: 5000
       
     
 rabbitmq:
@@ -15,5 +24,8 @@ rabbitmq:
   responseQueue: responseQueue
   requestExchange: requestExchange
   requestRoutingkey: request
+  deadExchange: deadExchange
+  deadQueue: deadQueue
+  deadRoutingkey: dead
     
   

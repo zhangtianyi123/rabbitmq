@@ -1,5 +1,6 @@
 # RabbitMQ
 
+
 ---
 
 ## 消息丢失问题
@@ -11,6 +12,9 @@
 publisher-confirms：消息发送到Exchange后触发回调
 publisher-returns：消息从Exchange发送到queue失败时触发回调
 
+- 存储阶段的持久化机制
+ - 将queue的持久化标识durable设置为true,则代表是一个持久的队列
+ - 发送消息的时候将deliveryMode=2
 
 - 消费阶段的ack机制
  - none:收到消息即立即确认，如果后续消费端异常没能成功处理消息，broker也不会重发，相当于不确认
@@ -125,8 +129,140 @@ public class MessageManualHandler implements ChannelAwareMessageListener {
 	}
 
 ```
+
+但是如果把ack的代码移动到onMessage方法的首行，也会报错，但是消息会直接消费掉
+```
+	public void onMessage(Message message, Channel channel) throws Exception {
+		channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+		//调用业务方法
+	}
+```
+
+
+手动消息可以灵活的发送ack，nack(重新入队)，丢弃消息
+```
+//手动在处理完以后发送ack
+channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+		
+//消息重新入队
+boolean requeue = true;
+channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, requeue);
+		
+//拒绝丢弃消息
+boolean reject = false;
+channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, reject);
+```
+
+> 需要注意的是不管是ack，nack ，发生异常的时候代码都无法执行到，所以需要与try-catch搭配
+
+### 死信队列
+
+RabbitMQ的TTL 全称为Time-To-Live 表示消息的有效期，消息如果在队列中一直没有被消费并且存在时间超过了TTL 消息就会编程死信（Dead Message）,后续无法再被消费了
+
+- 设置TTL的两种方式
+ - 声明队列的时候设置，对整个队列的消息都有效（x-message-ttl）
+ - 发送消息的时候设置属性，每个消息不同
+
+两种设置取最小值为准
+
+DXL:Dead-Letter-Exchange 死信交换机
+
+- 消息变为死信的情况
+ - 消息被拒绝（Basic.Reject/Basix.Nack）并且设置requeue参数为false
+ - 消息过期
+ - 队列达到最大的长度
+
+当消息在一个队列中变成死信队列之后，可以自动发送到设置的DLX,进而被路由到DLX绑定的死信队列
+
+> 可以利用这个机制实现**延时队列**（原队列没有消费者，过期后自动发送到死信队列）
+
+配置死信交换机和死信路由并配置死信队列
+```
+@Bean("requestQueue")
+public Queue requestQueue() {
+	Map<String, Object> args = new HashMap<>(2);
+	args.put("x-dead-letter-exchange", deadExchange);
+	args.put("x-dead-letter-routing-key", deadbinding);
+	return QueueBuilder.durable(requestQueue).withArguments(args).build();
+}
+```
+
+```
+public Binding bindingDeadExchangeMessage(Queue deadQueue, DirectExchange deadExchange) {
+	Binding b =  BindingBuilder.bind(deadQueue).to(deadExchange).with(deadbinding);
+	return b;
+}
+```
+
+> 使用构建者模式来创建queue Exchange... 参数属性通过Map传递（比如死信队列）
+如果声明的属性和broker实体已经建立的不一样，那么启动会报错
+
+当nack时（没有requeue时，将会把消息传入死信队列中）
+
+```
+if(ack) {
+	//消息重新入队
+	boolean requeue = true;
+	channel.basicNack(tag, false, false);
+	log.info("重新入队");
+} else {
+	//手动在处理完以后发送ack
+	channel.basicAck(tag, false);
+	log.info("手动确认");
+}
+```
+
+消费死信队列就能处理这些脏数据
+
+![image_1dltqpsj61g961i6v1hb26edmj39.png-33.3kB][1]
+ 
+ 手动模式下通过代码层面的缓存机制实现，在异常处理的情况下，如果异常超过阈值则丢弃（进而会被放入死信队列），如果异常还不满阈值，则重试（requeue）;如果超过阈值，比如三五次都还处理失败，基本可以证明是脏数据
+ 
+```
+ //调用业务方法
+boolean ack = false;
+String reqId = requestEntity.getReqId();;
+try {
+	ResponseEntity response = chooseOneService.doPressureTest(requestEntity);
+} catch(Exception e) {
+	log.info("exception");
+	ack = true;
+	e.printStackTrace();
+}
+		
+if(ack) {
+	//消息重新入队
+    if(isMaxAttempt(reqId)) {
+    	boolean reject = false;
+    	channel.basicNack(tag, false, reject);
+    	log.info("丢弃死信:{}", reqId);
+    } else {
+    	boolean requeue = true;
+    	channel.basicNack(tag, false, requeue);
+    	log.info("重新入队:{}", reqId);
+    }
+} else {
+	//手动在处理完以后发送ack
+	channel.basicAck(tag, false);
+	log.info("确认成功:{}", reqId);
+}
+```
+
+```
+/**
+* 设置异常前提下的重试次数，手动模式下尝试一定的次数，失败放入死信
+*/
+private boolean isMaxAttempt(String reqId) {
+	MessageIdCache.cache.put(reqId, MessageIdCache.cache.getOrDefault(reqId, 0) + 1);
+	if(MessageIdCache.cache.get(reqId) > 3) {
+		return true;
+	}
+	return false;
+}
+```
  
 
 
 
 
+  [1]: http://static.zybuluo.com/zhangtianyi/u3v6v65fq2z4bk7ml38wdc5o/image_1dltqpsj61g961i6v1hb26edmj39.png

@@ -28,29 +28,29 @@ public class AmqpSender {
 	
 	private static long count = 0;
 
-//	@Scheduled(fixedRate = 3000)
-//	public void send() {
-//		RequestEntity entity = new RequestEntity();
-//		entity.setEventName(LocalDateTime.now().toString());
-//		entity.setLotName(RandomStringUtils.randomNumeric(5));
-//		entity.setProcName(RandomStringUtils.randomAscii(5));
-//		entity.setReqId((count++) + "");
-//		this.rabbitTemplate.convertAndSend(exchangeName, routingKey, entity);
-//		log.info("send message...");
-//	}
-	
-	@Scheduled(fixedRate = 3000)
-	public void sendErrorMessage() {
-		try {
-			 RequestEntity entity = new RequestEntity();
-			 entity.setEventName(LocalDateTime.now().toString());
-			 entity.setLotName(null);
-			 entity.setProcName(null);
-			 entity.setReqId((count++) + "");
-			 this.rabbitTemplate.convertAndSend(exchangeName, routingKey, entity);
-			 log.info("send message...");
-		} catch (Exception e) {
-		}
-		
+	@Scheduled(fixedRate = 30)
+	public void send() {
+		RequestEntity entity = new RequestEntity();
+		entity.setEventName(LocalDateTime.now().toString());
+		entity.setLotName(RandomStringUtils.randomNumeric(5));
+		entity.setProcName(RandomStringUtils.randomAscii(5));
+		entity.setReqId((count++) + "");
+		this.rabbitTemplate.convertAndSend(exchangeName, routingKey, entity);
+		log.info("send message...");
 	}
+	
+//	@Scheduled(fixedRate = 3000)
+//	public void sendErrorMessage() {
+//		try {
+//			 RequestEntity entity = new RequestEntity();
+//			 entity.setEventName(LocalDateTime.now().toString());
+//			 entity.setLotName(null);
+//			 entity.setProcName(null);
+//			 entity.setReqId((count++) + "");
+//			 this.rabbitTemplate.convertAndSend(exchangeName, routingKey, entity);
+//			 log.info("send message...");
+//		} catch (Exception e) {
+//		}
+//		
+//	}
 }

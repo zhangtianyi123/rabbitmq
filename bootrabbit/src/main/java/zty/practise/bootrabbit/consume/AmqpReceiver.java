@@ -1,6 +1,7 @@
 package zty.practise.bootrabbit.consume;
 
 import java.io.IOException;
+
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import org.springframework.amqp.core.Message;
@@ -19,6 +20,7 @@ import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import zty.practise.bootrabbit.model.RequestEntity;
 import zty.practise.bootrabbit.model.ResponseEntity;
+import zty.practise.bootrabbit.util.MessageIdCache;
 
 @Service("amqpReceiver")
 @Slf4j
@@ -28,7 +30,7 @@ public class AmqpReceiver {
 	private PressureTestService chooseOneService;
 
 	@RabbitListener(queues = "requestQueue", containerFactory="rabbitListenerContainerFactory")
-	public void process(Message message, Channel channel,@Header(AmqpHeaders.DELIVERY_TAG) long tag) throws ParseException, IOException {
+	public void process(Message message, Channel channel,@Header(AmqpHeaders.DELIVERY_TAG) long tag) throws ParseException, IOException, InterruptedException {
 //		log.info("Receiver:{}", message);
 		
 		String body = "";
@@ -53,24 +55,46 @@ public class AmqpReceiver {
 		
 		//调用业务方法
 		boolean ack = false;
+		String reqId = requestEntity.getReqId();;
 		try {
 			ResponseEntity response = chooseOneService.doPressureTest(requestEntity);
 		} catch(Exception e) {
-			log.info("exception");
 			ack = true;
 			e.printStackTrace();
 		}
 		
+		//模拟每个消息要处理一秒钟
+		Thread.sleep(1000);
+		
 		if(ack) {
 			//消息重新入队
-			boolean requeue = true;
-			channel.basicNack(tag, false, requeue);
-			log.info("重新入队");
+			if(isMaxAttempt(reqId)) {
+				boolean reject = false;
+				channel.basicNack(tag, false, reject);
+				log.info("丢弃死信:{}", reqId);
+			} else {
+				boolean requeue = true;
+				channel.basicNack(tag, false, requeue);
+				log.info("重新入队:{}", reqId);
+			}
 		} else {
 			//手动在处理完以后发送ack
 			channel.basicAck(tag, false);
-			log.info("手动确认");
+			log.info("确认成功:{}", reqId);
 		}
+	}
+	
+	/**
+	 * 设置异常前提下的重试次数，手动模式下尝试一定的次数，失败放入死信
+	 * @param reqId
+	 * @return
+	 */
+	private boolean isMaxAttempt(String reqId) {
+		MessageIdCache.cache.put(reqId, MessageIdCache.cache.getOrDefault(reqId, 0) + 1);
+		if(MessageIdCache.cache.get(reqId) > 3) {
+			return true;
+		}
+		return false;
 	}
 
 }
