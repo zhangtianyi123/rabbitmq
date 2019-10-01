@@ -36,7 +36,7 @@ public class AmqpSender {
 		entity.setProcName(RandomStringUtils.randomAscii(5));
 		entity.setReqId((count++) + "");
 		this.rabbitTemplate.convertAndSend(exchangeName, routingKey, entity);
-		log.info("send message...");
+//		log.info("send message...");
 	}
 	
 //	@Scheduled(fixedRate = 3000)

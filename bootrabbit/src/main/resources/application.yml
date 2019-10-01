@@ -7,13 +7,13 @@ spring:
     virtual-host: vhost_test01
     listener:
       simple: 
-        prefetch: 90
-        concurrency: 3
+        prefetch: 10
+        concurrency: 1
         acknowledge-mode: manual
-        # retry:
-          # max-attempts: 5
-          # enabled: true
-          # initial-interval: 5000
+        #retry:
+          #max-attempts: 5
+          #enabled: true
+          #initial-interval: 5000
       
     
 rabbitmq:

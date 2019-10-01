@@ -1,6 +1,4 @@
 # RabbitMQ
-
-
 ---
 
 ## 消息丢失问题
@@ -157,6 +155,8 @@ channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, reject
 
 ### 死信队列
 
+> bootrabbit项目
+
 RabbitMQ的TTL 全称为Time-To-Live 表示消息的有效期，消息如果在队列中一直没有被消费并且存在时间超过了TTL 消息就会编程死信（Dead Message）,后续无法再被消费了
 
 - 设置TTL的两种方式
@@ -216,6 +216,8 @@ if(ack) {
 
 ![image_1dltqpsj61g961i6v1hb26edmj39.png-33.3kB][1]
  
+### 手动设置重试进入死信队列
+ 
  手动模式下通过代码层面的缓存机制实现，在异常处理的情况下，如果异常超过阈值则丢弃（进而会被放入死信队列），如果异常还不满阈值，则重试（requeue）;如果超过阈值，比如三五次都还处理失败，基本可以证明是脏数据
  
 ```
@@ -261,8 +263,79 @@ private boolean isMaxAttempt(String reqId) {
 }
 ```
  
+### 本地缓存（prefetch）与并发消费（concurrency）
+
+prefetch允许为每个consumer指定最大的unacked messages数目。简单来说就是用来指定一个consumer一次可以从Rabbit中获取多少条message并缓存在client中。一旦缓冲区满了，Rabbit将会停止投递新的message到该consumer中直到它发出ack。
+(consumer线程内部维护了一个阻塞队列BlockingQueue——**经典的双重生产者消费者模式**
+
+> 所以这个prefetch的大小实际上就是queuesize的大小
+
+- prefetch可能会丢失消息，缓存在本地而为ack的消息可能因为服务挂掉而丢失
+
+如果此时消费者线程数为2：
+每个consumer每次会从queue中预抓取 10 条消息到本地缓存着等待消费。同时该channel的unacked数变为20。而Rabbit投递的顺序是，先为consumer1投递满10个message，再往consumer2投递10个message。下一条消息需要两个消费者中的一个ack至少一条之后才能继续投放。
+
+> uncak = prefetch * consumernum = prefetch * (concurrency * psnum)
 
 
+### 情形1：prefetch=n,concurreny=1
 
+- 配置
+ - spring.rabbitmq.listener.simple.prefetch = 100
+ - spring.rabbitmq.listener.simple.prefetch = 1
+ - AmqpSender类中使用send()方法发送正常消息
+ - 调快AmqpSender-@Scheduled的发送速率
+ - 使用线程休眠降低消费速度
+
+ 测试结果：消息顺序消费
+ 
+### 情形2：prefetch=1,concurreny=n
+
+- 配置
+ - spring.rabbitmq.listener.simple.prefetch = 1
+ - spring.rabbitmq.listener.simple.prefetch = 100
+ - AmqpSender类中使用send()方法发送正常消息
+ - 调快AmqpSender-@Scheduled的发送速率
+ - 使用线程休眠降低消费速度
+
+```
+//模拟处理时间
+Thread.sleep(RandomUtils.nextLong(500, 5000));
+```
+
+配置：
+```
+prefetch: 1
+concurrency: 100
+```
+
+测试结果：消息被无序消费
+
+### 情形3：prefetch=n,concurreny=n
+- 配置
+ - spring.rabbitmq.listener.simple.prefetch = 100
+ - spring.rabbitmq.listener.simple.prefetch = 100
+ - AmqpSender类中使用send()方法发送正常消息
+ - 调快AmqpSender-@Scheduled的发送速率
+ - 使用线程休眠降低消费速度
+
+测试结果：消息被无序消费
+
+> prefetch:The higher this is the faster the messages can be delivered, but the higher the risk of non-sequential processing
+虽然一般情况下能保证preftch下的顺序消费，但是值越大，出现非顺序性消费的可能性就越高
+ 
+ 
+ container启动的时候会根据设置的concurrency的值（同时不超过最大值）创建n个BlockingQueueConsumer
+ 
+ BlockingQueueConsumer内部应该维护了一个阻塞队列BlockingQueue，prefetch应该是这个阻塞队列的长度，BlockingQueueConsumer内部有个queue，这个queue不是对应RabbitMQ的队列，而是Consumer自己维护的内存级别的队列，用来暂时存储从RabbitMQ中取出来的消息
+ 
+> 对消息的顺序有苛刻要求的场景不适合并发消费
+
+### 消息重复消费
+
+幂等性
+
+- 数据库去重表方式
+- 内存redis方式
 
   [1]: http://static.zybuluo.com/zhangtianyi/u3v6v65fq2z4bk7ml38wdc5o/image_1dltqpsj61g961i6v1hb26edmj39.png
