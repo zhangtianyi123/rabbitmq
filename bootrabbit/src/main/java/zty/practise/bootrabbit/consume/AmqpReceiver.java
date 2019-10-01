@@ -29,7 +29,8 @@ public class AmqpReceiver {
 	@Autowired
 	private PressureTestService chooseOneService;
 
-	@RabbitListener(queues = "requestQueue", containerFactory="rabbitListenerContainerFactory")
+	//@RabbitListener(queues = "requestQueue", containerFactory="rabbitListenerContainerFactory")
+	@RabbitListener(queues = "requestQueue")
 	public void process(Message message, Channel channel,@Header(AmqpHeaders.DELIVERY_TAG) long tag) throws ParseException, IOException, InterruptedException {
 //		log.info("Receiver:{}", message);
 		

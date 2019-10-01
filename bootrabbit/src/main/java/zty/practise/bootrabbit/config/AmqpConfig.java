@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -101,15 +102,16 @@ public class AmqpConfig {
 		return template;
 	}
 
-	@Bean
-	public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
-		SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-		factory.setConnectionFactory(connectionFactory);
-		factory.setMessageConverter(new Jackson2JsonMessageConverter());
+//	@Bean("rabbitListenerContainerFactory")
+//	public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
+//		SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+//		factory.setConnectionFactory(connectionFactory);
+//		//factory.setMessageConverter(new Jackson2JsonMessageConverter());
+//		factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
 //		factory.setPrefetchCount(80);
 //		factory.setConcurrentConsumers(2);
-		return factory;
-	}
+//		return factory;
+//	}
 
 	// @Bean
 	// public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {

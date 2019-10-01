@@ -5,13 +5,10 @@ spring:
     username: zhangtianyi
     password: zhangtianyi
     virtual-host: vhost_test01
-    connection-timeout: 0
     listener:
-      # type: simple
-      prefetch: 80
-      concurrency: 2
       simple: 
-        # default-requeue-rejected: false
+        prefetch: 90
+        concurrency: 3
         acknowledge-mode: manual
         # retry:
           # max-attempts: 5
