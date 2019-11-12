@@ -1,0 +1,24 @@
+server:
+  port: 8012
+  
+spring:
+  cloud:
+    stream:
+      binders:
+        litteRabbit:
+          environment:
+            spring:
+              rabbitmq:
+                addresses: 127.0.0.1:5672
+                username: zhangtianyi
+                password: zhangtianyi
+                virtual-host: vhost_test01
+          type: rabbit
+      bindings:
+        outputBusinessAdvice:
+          binder: litteRabbit
+          destination: businessAdviceDestination
+        inputBusinessAdvice:
+          binder: litteRabbit
+          destination: businessAdviceDestination
+          group: businessAdviceGroup
