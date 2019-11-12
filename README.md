@@ -338,4 +338,146 @@ concurrency: 100
 - 数据库去重表方式
 - 内存redis方式
 
+### Spring Cloud Stream(Rabbit)
+
+定义绑定接口
+
+```
+public interface BusinessAdviceStreamClient {
+
+	String INPUT = "inputBusinessAdvice";
+
+    String OUTPUT = "outputBusinessAdvice";
+
+    @Input(BusinessAdviceStreamClient.INPUT)
+    SubscribableChannel input();
+
+    @Output(BusinessAdviceStreamClient.OUTPUT)
+    MessageChannel output();
+}
+```
+
+生产者
+```
+@Component
+@EnableBinding(value = { BusinessAdviceStreamClient.class })
+public class SreamSender {
+
+	@Autowired
+	private BusinessAdviceStreamClient businessAdviceStreamClient;
+
+	/**
+	 * 发送业务通知
+	 *
+	 * @param alarmMessage
+	 */
+	public void sendAlarmMessage(Object alarmMessage) {
+		boolean b = businessAdviceStreamClient.output().send(MessageBuilder.withPayload(alarmMessage).build());
+	}
+	
+}
+```
+
+消费者
+```
+	@StreamListener(BusinessAdviceStreamClient.INPUT)
+	public void process(AlarmMessage alarmMessage) {
+		log.info("receive business message : {}", alarmMessage);
+		
+		//模拟业务处理（可能出现异常）
+		alarmMessage.getAlarmItemCode().charAt(0);
+	}
+```
+
+- 自定义错误处理：特定通道
+
+```
+// BusinessAdviceReceiver.java
+@ServiceActivator(inputChannel = "businessAdviceDestination.businessAdviceGroup.errors") 
+public void error(Message<?> message) {
+    System.out.println("businessAdviceGroup Handling ERROR: " + message);
+}
+```
+
+- 自定义错误处理：全局捕获
+
+```
+// BusinessAdviceReceiver.java
+@StreamListener("errorChannel")
+public void allError(Message<?> message) {
+	System.out.println("all Handling ERROR: " + message);
+}
+```
+
+配置文件
+```
+server:
+  port: 8012
+  
+spring:
+  cloud:
+    stream:
+      binders:
+        litteRabbit:
+          environment:
+            spring:
+              rabbitmq:
+                addresses: 127.0.0.1:5672
+                username: zhangtianyi
+                password: zhangtianyi
+                virtual-host: vhost_test01
+          type: rabbit
+      bindings:
+        outputBusinessAdvice:
+          binder: litteRabbit
+          destination: businessAdviceDestination
+        inputBusinessAdvice:
+          binder: litteRabbit
+          destination: businessAdviceDestination
+          group: businessAdviceGroup
+          consumer:
+            # 最多尝试处理几次，默认3	
+            maxAttempts: 5
+      rabbit:
+        bindings:
+          inputBusinessAdvice:
+            consumer:
+              auto-bind-dlq: true
+              republish-to-dlq: true
+              # 对顺序不做要求时
+              prefetch: 250
+              maxConcurrency: 5
+```
+
+死信队列：
+```
+# 开启死信队列（重试后，进入死信队列）
+auto-bind-dlq: true
+# 附带传递错误信息到死信队列
+republish-to-dlq: true
+```
+
+修改错误时重试次数
+```
+# 最多尝试处理几次，默认3	
+maxAttempts: 5
+```
+
+> 重试+死信队列为较好的处理方式，直接丢弃往往都不能接受，而requeue重新排队很多时候错误都是非瞬时的，可能会陷入死循环，而网络抖动等问题，可以通过重试解决。而自定义的降级策略往往很难取得良好的效果。
+
+
+定时发送
+```
+@Bean
+@InboundChannelAdapter(value = BusinessAdviceStreamClient.OUTPUT,	
+        poller = @Poller(fixedDelay = "1000", maxMessagesPerPoll = "1"))	
+public MessageSource<Object> sendAlarmMessageSchedule() {	
+	AlarmMessage alarmMessage = new AlarmMessage();
+	alarmMessage.setAlarmItemCode("code");
+	alarmMessage.setAlarmMessageIdentifier(1L);
+	log.info("send schedule message");
+    return () -> new GenericMessage<>(alarmMessage);	
+}	
+```
+
   [1]: http://static.zybuluo.com/zhangtianyi/u3v6v65fq2z4bk7ml38wdc5o/image_1dltqpsj61g961i6v1hb26edmj39.png
