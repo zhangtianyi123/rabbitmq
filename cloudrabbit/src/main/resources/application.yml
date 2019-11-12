@@ -22,9 +22,18 @@ spring:
           binder: litteRabbit
           destination: businessAdviceDestination
           group: businessAdviceGroup
+          consumer:
+            # 最多尝试处理几次，默认3	
+            maxAttempts: 5
       rabbit:
         bindings:
           inputBusinessAdvice:
             consumer:
               auto-bind-dlq: true
               republish-to-dlq: true
+              # 对顺序不做要求时
+              prefetch: 250
+              maxConcurrency: 5
+
+
+      
