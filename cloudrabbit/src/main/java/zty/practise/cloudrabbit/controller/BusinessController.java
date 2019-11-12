@@ -16,4 +16,9 @@ public class BusinessController {
 	public void send() {
 		businessService.handleAndSendMessage();
 	}
+	
+	@PostMapping("/send/error")
+	public void sendError() {
+		businessService.handleAndSendErrorMessage();
+	}
 }

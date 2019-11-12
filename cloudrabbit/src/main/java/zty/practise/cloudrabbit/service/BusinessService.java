@@ -24,4 +24,12 @@ public class BusinessService {
 		sreamSender.sendAlarmMessage(alarmMessage);
 		log.info("send message");
 	}
+	
+	public void handleAndSendErrorMessage() {
+		AlarmMessage alarmMessage = new AlarmMessage();
+		alarmMessage.setAlarmItemCode(null);
+		alarmMessage.setAlarmMessageIdentifier(1L);
+		sreamSender.sendAlarmMessage(alarmMessage);
+		log.info("send message");
+	}
 }
