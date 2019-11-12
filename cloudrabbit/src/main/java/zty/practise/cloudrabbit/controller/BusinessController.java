@@ -21,4 +21,5 @@ public class BusinessController {
 	public void sendError() {
 		businessService.handleAndSendErrorMessage();
 	}
+	
 }
