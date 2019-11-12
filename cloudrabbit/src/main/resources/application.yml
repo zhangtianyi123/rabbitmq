@@ -22,3 +22,9 @@ spring:
           binder: litteRabbit
           destination: businessAdviceDestination
           group: businessAdviceGroup
+      rabbit:
+        bindings:
+          inputBusinessAdvice:
+            consumer:
+              auto-bind-dlq: true
+              republish-to-dlq: true

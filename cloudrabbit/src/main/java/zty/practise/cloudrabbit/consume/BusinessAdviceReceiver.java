@@ -32,17 +32,17 @@ public class BusinessAdviceReceiver {
 	}
 	
 	/**
-	 * 自定义的特定通道错误处理
+	 * 自定义的特定通道错误处理,降级逻辑
 	 * process 方法已成将会发送错误到此订阅者
 	 * @param message
 	 */
-//	@ServiceActivator(inputChannel = BusinessAdviceStreamClient.INPUT + ".businessAdviceGroup.errors") 
+//	@ServiceActivator(inputChannel = "businessAdviceDestination.businessAdviceGroup.errors") 
 //	public void error(Message<?> message) {
 //		System.out.println("businessAdviceGroup Handling ERROR: " + message);
 //	}
 	
 	/** 
-	 * 自定义的全局错误处理
+	 * 自定义的全局错误处理,降级逻辑
 	 * 全局错误处理
 	 * @param message
 	 */
@@ -50,6 +50,6 @@ public class BusinessAdviceReceiver {
 //	public void allError(Message<?> message) {
 //		System.out.println("all Handling ERROR: " + message);
 //	}
-	
+//	
 	
 }
