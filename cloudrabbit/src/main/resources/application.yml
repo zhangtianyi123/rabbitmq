@@ -1,11 +1,11 @@
 server:
-  port: 8011
+  port: 8013
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "bindings"
         
 spring:
   cloud:
@@ -24,6 +24,10 @@ spring:
         outputBusinessAdvice:
           binder: litteRabbit
           destination: businessAdviceDestination
+          #producer:
+          #  partitioned: true
+           # partition-key-expression: headers['partitionKey']
+           # partition-count: 3
         inputBusinessAdvice:
           binder: litteRabbit
           destination: businessAdviceDestination
@@ -31,6 +35,8 @@ spring:
           consumer:
             # 最多尝试处理几次，默认3	
             maxAttempts: 5
+            partitioned: true
+            instance-index: 2
       rabbit:
         bindings:
           inputBusinessAdvice:

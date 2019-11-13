@@ -25,7 +25,7 @@ public class BusinessAdviceReceiver {
 	 */
 	@StreamListener(BusinessAdviceStreamClient.INPUT)
 	public void process(AlarmMessage alarmMessage) {
-		log.info("consumer-1 receive business message : {}", alarmMessage);
+		log.info("consumer-3 receive business message : {}", alarmMessage);
 		
 //		try {
 //			Thread.sleep(5000000);
