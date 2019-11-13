@@ -25,8 +25,14 @@ public class BusinessAdviceReceiver {
 	 */
 	@StreamListener(BusinessAdviceStreamClient.INPUT)
 	public void process(AlarmMessage alarmMessage) {
-		log.info("receive business message : {}", alarmMessage);
+		log.info("consumer-1 receive business message : {}", alarmMessage);
 		
+//		try {
+//			Thread.sleep(5000000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		//模拟业务处理（可能出现异常）
 		alarmMessage.getAlarmItemCode().charAt(0);
 	}
