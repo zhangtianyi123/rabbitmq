@@ -1,5 +1,5 @@
 server:
-  port: 8013
+  port: 8014
 
 management:
   endpoints:
@@ -24,10 +24,11 @@ spring:
         outputBusinessAdvice:
           binder: litteRabbit
           destination: businessAdviceDestination
-          #producer:
-          #  partitioned: true
-           # partition-key-expression: headers['partitionKey']
-           # partition-count: 3
+          producer:
+            #分区表达式, 例如当表达式的值为1, 那么在订阅者的instance-index中为1的接收方, 将会执行该消息
+            partition-key-expression: headers['partitionKey']
+            #指定参与消息分区的消费端节点数量
+            partition-count: 4
         inputBusinessAdvice:
           binder: litteRabbit
           destination: businessAdviceDestination
@@ -36,7 +37,7 @@ spring:
             # 最多尝试处理几次，默认3	
             maxAttempts: 5
             partitioned: true
-            instance-index: 2
+            instance-index: 3
       rabbit:
         bindings:
           inputBusinessAdvice:

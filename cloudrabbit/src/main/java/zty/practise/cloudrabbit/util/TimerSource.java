@@ -38,16 +38,15 @@ public class TimerSource {
 //		return () -> new GenericMessage<>(alarmMessage);
 //	}
 
-	private static final String[] data = new String[] { "abc1", "def1", "qux1", "abc2", "def2", "qux2", "abc3", "def3",
-			"qux3", "abc4", "def4", "qux4", };
+	private static final String[] data = new String[] { "aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
 
 	@InboundChannelAdapter(channel = BusinessAdviceStreamClient.OUTPUT, poller = @Poller(fixedRate = "2000"))
 	public Message<?> generate() {
 		String value = data[new Random().nextInt(data.length)];
 		AlarmMessage alarmMessage = new AlarmMessage();
-		alarmMessage.setAlarmItemCode(count++ + "-" + new Date());
+		alarmMessage.setAlarmItemCode(value);
 		alarmMessage.setAlarmMessageIdentifier(1L);
-		System.out.println("Sending: " + alarmMessage);
+		System.out.println("Sending: " + value + " = "+ value.hashCode());
 		return MessageBuilder.withPayload(alarmMessage).setHeader("partitionKey", value).build();
 	}
 }
