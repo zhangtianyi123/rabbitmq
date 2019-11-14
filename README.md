@@ -1,4 +1,5 @@
 # RabbitMQ
+
 ---
 
 ## 消息丢失问题
@@ -338,6 +339,7 @@ concurrency: 100
 - 数据库去重表方式
 - 内存redis方式
 
+
 ### Spring Cloud Stream(Rabbit)
 
 定义绑定接口
@@ -480,4 +482,57 @@ public MessageSource<Object> sendAlarmMessageSchedule() {
 }	
 ```
 
+
+### 分区
+
+单纯消费者组（spring cloud stream group） + RabbitMQ的时候  ，虽然每个消息只发到其中的一个消费者实例，但是并不是同一个队列的消息每次发到同一个消费者。而且比如一个队列3个消费者，并不是互相等ack,第一个消费者没有ack ，后面的消息还是可以发给其它消费者，违背了队列有序性。
+
+在消费组中我们可以保证消息不会被重复消费，但是在同组下有多个实例的时候，我们无法确定每次处理消息的是不是被同一消费者消费，分区的作用就是为了确保具有共同特征标识的数据由同一个消费者实例进行处理
+
+RabbitMQ 想要保证顺序性，需要队列和消费者一一对应，但是这种绑定关系的配置使得消费者程序难于水平扩展，所以结合spring cloud stream 提供的分区（借鉴kafka）机制，可以实现自动的rebalance
+
+RabbitMQ 天然是不支持分区的，但是spring cloud stream 提供一种一致性的方式，使得**同种标识的数据能够被同一个消费者实例处理**
+
+消费者配置：
+```
+consumer:
+    partitioned: true
+    # 分区号
+    instance-index: 3
+```
+
+生产者配置
+```
+producer:
+    #分区表达式, 例如当表达式的值为1, 那么在订阅者的instance-index中为1的接收方, 将会执行该消息
+    partition-key-expression: headers['partitionKey']
+    #指定参与消息分区的消费端节点数量
+    partition-count: 4
+```
+
+生产者发送消息
+```
+//TimerSource.java
+	@InboundChannelAdapter(channel = BusinessAdviceStreamClient.OUTPUT, poller = @Poller(fixedRate = "2000"))
+	public Message<?> generate() {
+		String value = data[new Random().nextInt(data.length)];
+		AlarmMessage alarmMessage = new AlarmMessage();
+		alarmMessage.setAlarmItemCode(value);
+		alarmMessage.setAlarmMessageIdentifier(1L);
+		System.out.println("Sending: " + value + " = "+ value.hashCode());
+		return MessageBuilder.withPayload(alarmMessage).setHeader("partitionKey", value).build();
+	
+```
+
+spring cloud stream 默认会取key值的hashcode()值对instancecount取余，并映射到(routingkey)对应的queue
+
+
+
+
+
+
   [1]: http://static.zybuluo.com/zhangtianyi/u3v6v65fq2z4bk7ml38wdc5o/image_1dltqpsj61g961i6v1hb26edmj39.png
+
+
+
+
