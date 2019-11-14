@@ -40,13 +40,13 @@ public class TimerSource {
 
 	private static final String[] data = new String[] { "aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
 
-	@InboundChannelAdapter(channel = BusinessAdviceStreamClient.OUTPUT, poller = @Poller(fixedRate = "2000"))
-	public Message<?> generate() {
-		String value = data[new Random().nextInt(data.length)];
-		AlarmMessage alarmMessage = new AlarmMessage();
-		alarmMessage.setAlarmItemCode(value);
-		alarmMessage.setAlarmMessageIdentifier(1L);
-		System.out.println("Sending: " + value + " = "+ value.hashCode());
-		return MessageBuilder.withPayload(alarmMessage).setHeader("partitionKey", value).build();
-	}
+//	@InboundChannelAdapter(channel = BusinessAdviceStreamClient.OUTPUT, poller = @Poller(fixedRate = "2000"))
+//	public Message<?> generate() {
+//		String value = data[new Random().nextInt(data.length)];
+//		AlarmMessage alarmMessage = new AlarmMessage();
+//		alarmMessage.setAlarmItemCode(value);
+//		alarmMessage.setAlarmMessageIdentifier(1L);
+//		System.out.println("Sending: " + value + " = "+ value.hashCode());
+//		return MessageBuilder.withPayload(alarmMessage).setHeader("partitionKey", value).build();
+//	}
 }

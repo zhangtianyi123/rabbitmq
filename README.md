@@ -526,8 +526,46 @@ producer:
 
 spring cloud stream 默认会取key值的hashcode()值对instancecount取余，并映射到(routingkey)对应的queue
 
+为了分区生产者和使用者，队列以分区索引作为后缀，并使用分区索引作为路由键（routing key）
 
+虽然spring cloud stream基于boot提供了自动配置分区的逻辑，但是对于第三方的任务不一定使用spring cloud stream作为生产者来发送消息
 
+所以这里基于cloud stream的原理用普通哈希算法实现分区选择
+
+```
+@Scheduled(fixedRate = 3000)
+	public void send() {
+		String exchange = "businessAdviceDestination";
+		int instanceCount = 4;
+		
+		String key = data[new Random().nextInt(data.length)];
+		AlarmMessage alarmMessage = new AlarmMessage();
+		alarmMessage.setAlarmItemCode(key);
+		alarmMessage.setAlarmMessageIdentifier(1L);
+		
+		System.out.println("Sending: " + key + " = "+ key.hashCode() + "=" + getRoutingKeyByHash(exchange, instanceCount, key));
+		this.rabbitTemplate.convertAndSend(exchange, getRoutingKeyByHash(exchange, instanceCount, key), alarmMessage);
+	}
+	
+	/**
+	 * 普通的哈希算法确定分区，默认exchange-0
+	 * @param exchange
+	 * @param instanceCount
+	 * @param key
+	 * @return
+	 */
+	private String getRoutingKeyByHash(String exchange, int instanceCount, String key) { 
+		String routingKey = exchange;
+		
+		int mod = 0;
+		if(key.hashCode() % instanceCount >= 0 && key.hashCode() % instanceCount < instanceCount) {
+			mod = key.hashCode() % instanceCount;
+		}
+		routingKey = routingKey + "-" + mod;
+		
+		return routingKey;
+	}
+```
 
 
 

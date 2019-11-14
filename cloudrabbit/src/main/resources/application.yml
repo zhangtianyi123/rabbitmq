@@ -6,7 +6,7 @@ management:
     web:
       exposure:
         include: "bindings"
-        
+    
 spring:
   cloud:
     stream:
@@ -47,6 +47,13 @@ spring:
               # 对顺序不做要求时
               # prefetch: 250
               # maxConcurrency: 5
-
+              
+  # amqptemplate 使用配置
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: zhangtianyi
+    password: zhangtianyi
+    virtual-host: vhost_test01
 
       
