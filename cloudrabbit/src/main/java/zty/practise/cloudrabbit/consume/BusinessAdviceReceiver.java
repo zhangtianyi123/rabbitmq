@@ -29,6 +29,9 @@ public class BusinessAdviceReceiver {
 	@Value("${spring.cloud.stream.bindings.inputBusinessAdvice.group}")
 	private String businessAdviceGroup;
 
+	@Value("${spring.cloud.stream.bindings.inputBusinessAdvice.consumer.maxAttempts}")
+	private Long maxAttempts;
+	
 	/**
 	 * 消费业务通知消息
 	 * 
@@ -45,7 +48,7 @@ public class BusinessAdviceReceiver {
 		log.info("consumer-1 receive business message : {}, deliveryAttempt={}", alarmMessage.getAlarmItemCode(),
 				deliveryAttempt);
 
-		if (deliveryAttempt < 5) {
+		if (deliveryAttempt < maxAttempts) {
 			// 模拟业务处理（可能出现异常）
 			alarmMessage.getAlarmItemCode().charAt(0);
 			
