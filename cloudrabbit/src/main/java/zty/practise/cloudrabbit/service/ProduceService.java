@@ -28,19 +28,19 @@ public class ProduceService {
 	/**
 	 * 自动模拟第三方定时发送，不发送时注释
 	 */
-	@Scheduled(fixedRate = 3000)
-	public void send() {
-		String exchange = "businessAdviceDestination";
-		int instanceCount = 4;
-		
-		String key = data[new Random().nextInt(data.length)];
-		AlarmMessage alarmMessage = new AlarmMessage();
-		alarmMessage.setAlarmItemCode(key);
-		alarmMessage.setAlarmMessageIdentifier(1L);
-		
-		System.out.println("Sending: " + key + " = "+ key.hashCode() + "=" + getRoutingKeyByHash(exchange, instanceCount, key));
-		this.rabbitTemplate.convertAndSend(exchange, getRoutingKeyByHash(exchange, instanceCount, key), alarmMessage);
-	}
+//	@Scheduled(fixedRate = 3000)
+//	public void send() {
+//		String exchange = "businessAdviceDestination";
+//		int instanceCount = 4;
+//		
+//		String key = data[new Random().nextInt(data.length)];
+//		AlarmMessage alarmMessage = new AlarmMessage();
+//		alarmMessage.setAlarmItemCode(key);
+//		alarmMessage.setAlarmMessageIdentifier(1L);
+//		
+//		System.out.println("Sending: " + key + " = "+ key.hashCode() + "=" + getRoutingKeyByHash(exchange, instanceCount, key));
+//		this.rabbitTemplate.convertAndSend(exchange, getRoutingKeyByHash(exchange, instanceCount, key), alarmMessage);
+//	}
 	
 	/**
 	 * 普通的哈希算法确定分区，默认exchange-0

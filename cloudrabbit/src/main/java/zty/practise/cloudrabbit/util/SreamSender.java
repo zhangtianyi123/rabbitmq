@@ -1,5 +1,7 @@
 package zty.practise.cloudrabbit.util;
 
+import java.util.Random;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +31,8 @@ public class SreamSender {
 	@Autowired
 	private BusinessAdviceStreamClient businessAdviceStreamClient;
 
+	private static final String[] data = new String[] { "aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
+	
 	/**
 	 * 发送业务通知
 	 *
@@ -38,4 +42,17 @@ public class SreamSender {
 		boolean b = businessAdviceStreamClient.output().send(MessageBuilder.withPayload(alarmMessage).build());
 	}
 	
+	/**
+	 * 发送分区业务通知
+	 *
+	 * @param alarmMessage
+	 */
+	public void sendPartitionAlarmMessage(Object alarmMessage) {
+		String key = data[new Random().nextInt(data.length)];
+		boolean b = businessAdviceStreamClient.output().send(MessageBuilder.withPayload(alarmMessage).setHeader("partitionKey", key).build());
+	}
+	
+	public void sendPartitionAlarmMessageTo0(Object alarmMessage) {
+		boolean b = businessAdviceStreamClient.output().send(MessageBuilder.withPayload(alarmMessage).setHeader("partitionKey", "ddd").build());
+	}
 }

@@ -598,6 +598,57 @@ spring.cloud.stream.rabbit.bindings.input.consumer.acknowledge-mode=manual
 	}
 ```
 
+> 如果业务处理出现异常的时候，将会放入死心队列，但是同时不会确认
+
+在spring cloud stream 开启自动重试之后
+```
+spring.cloud.stream.bindings.inputBusinessAdvice.consumer.maxAttempts=5
+```
+
+消息头中将会设置deliveryAttempt，根据其来传递重试次数，进而执行自动的重试逻辑
+
+由于开启了自动进入死信队列，所以最后一次重试发生异常将会进入死信队列（并且不会ack）,如果nack，那么也会进入死信队列，所以为了避免进入死信队列两次，需要将nack和可能发生异常的业务逻辑放到不同的条件分支
+
+```
+@StreamListener(BusinessAdviceStreamClient.INPUT)
+	public void process(AlarmMessage alarmMessage, @Header(AmqpHeaders.CHANNEL) Channel channel,
+			@Header(AmqpHeaders.DELIVERY_TAG) Long deliveryTag, @Header("deliveryAttempt") Long deliveryAttempt) {
+		// throw new AmqpRejectAndDontRequeueException("failed");
+		// 不发送到死信队列，直接放弃
+		// throw new ImmediateAcknowledgeAmqpException("Failed after 4
+		// attempts");
+
+		log.info("consumer-1 receive business message : {}, deliveryAttempt={}", alarmMessage.getAlarmItemCode(),
+				deliveryAttempt);
+
+		if (deliveryAttempt < 5) {
+			// 模拟业务处理（可能出现异常）
+			alarmMessage.getAlarmItemCode().charAt(0);
+			
+			// 手动确认
+			try {
+				channel.basicAck(deliveryTag, false);
+				log.info("business message : {} handle success",  alarmMessage.getAlarmItemCode());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			// 手动拒绝，进入死信队列
+			// 避免因为异常进入死信队列，手动发到死信队列，但是配置声明还是需要
+			try {
+				channel.basicNack(deliveryTag, false, false);
+				log.info("business message : {} send to dlq",  alarmMessage.getAlarmItemCode());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+```
+
+
+
 
   [1]: http://static.zybuluo.com/zhangtianyi/u3v6v65fq2z4bk7ml38wdc5o/image_1dltqpsj61g961i6v1hb26edmj39.png
 

@@ -32,4 +32,28 @@ public class BusinessService {
 		sreamSender.sendAlarmMessage(alarmMessage);
 		log.info("send message");
 	}
+	
+	public void handleAndSendPartitionMessage() {
+		AlarmMessage alarmMessage = new AlarmMessage();
+		alarmMessage.setAlarmItemCode("code");
+		alarmMessage.setAlarmMessageIdentifier(1L);
+		sreamSender.sendPartitionAlarmMessage(alarmMessage);
+		log.info("send message");
+	}
+	
+	public void handleAndSendPartitionErrorMessage() {
+		AlarmMessage alarmMessage = new AlarmMessage();
+		alarmMessage.setAlarmItemCode(null);
+		alarmMessage.setAlarmMessageIdentifier(1L);
+		sreamSender.sendPartitionAlarmMessage(alarmMessage);
+		log.info("send message");
+	}
+	
+	public void handleAndSendPartitionErrorMessageTo0() {
+		AlarmMessage alarmMessage = new AlarmMessage();
+		alarmMessage.setAlarmItemCode(null);
+		alarmMessage.setAlarmMessageIdentifier(1L);
+		sreamSender.sendPartitionAlarmMessageTo0(alarmMessage);
+		log.info("send message");
+	}
 }
