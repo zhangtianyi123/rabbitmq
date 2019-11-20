@@ -568,6 +568,36 @@ spring cloud stream 默认会取key值的hashcode()值对instancecount取余，�
 ```
 
 
+- 消息确认（ACK机制）
+
+spring cloud stream 默认为自动确认（AUTO）即不报错就返回ack。出于可靠性的角度，应该使用手动确认（MANUAL），在业务处理成功之后再ACK
+
+配置：
+```
+spring.cloud.stream.rabbit.bindings.input.consumer.acknowledge-mode=manual
+```
+
+消费者代码：
+```
+// 如果配置了手动确认，代码里没有手动ack的逻辑，消息将永远得不到ack,阻塞队列
+	@StreamListener(BusinessAdviceStreamClient.INPUT)
+	public void process(AlarmMessage alarmMessage, @Header(AmqpHeaders.CHANNEL) Channel channel,
+            @Header(AmqpHeaders.DELIVERY_TAG) Long deliveryTag) {
+		log.info("consumer-1 receive business message : {}", alarmMessage.getAlarmItemCode());
+		
+		//模拟业务处理（可能出现异常）
+		alarmMessage.getAlarmItemCode().charAt(0);
+		
+		//手动确认
+		try {
+			channel.basicAck(deliveryTag, false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+```
+
 
   [1]: http://static.zybuluo.com/zhangtianyi/u3v6v65fq2z4bk7ml38wdc5o/image_1dltqpsj61g961i6v1hb26edmj39.png
 

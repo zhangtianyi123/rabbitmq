@@ -1,5 +1,5 @@
 server:
-  port: 8014
+  port: 8011
 
 management:
   endpoints:
@@ -37,13 +37,14 @@ spring:
             # 最多尝试处理几次，默认3	
             maxAttempts: 5
             partitioned: true
-            instance-index: 3
+            instance-index: 0
       rabbit:
         bindings:
           inputBusinessAdvice:
             consumer:
               auto-bind-dlq: true
               republish-to-dlq: true
+              acknowledge-mode: manual
               # 对顺序不做要求时
               # prefetch: 250
               # maxConcurrency: 5

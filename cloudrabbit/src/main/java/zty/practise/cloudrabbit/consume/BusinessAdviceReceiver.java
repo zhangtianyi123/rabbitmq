@@ -5,11 +5,18 @@ import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
+
+import com.rabbitmq.client.Channel;
 
 import lombok.extern.slf4j.Slf4j;
 import zty.practise.cloudrabbit.model.AlarmMessage;
 import zty.practise.cloudrabbit.binder.BusinessAdviceStreamClient;
+
+import java.io.IOException;
+
+import org.springframework.amqp.support.AmqpHeaders;
 
 @Component
 @Slf4j
@@ -24,17 +31,20 @@ public class BusinessAdviceReceiver {
 	 * @param alarmMessage
 	 */
 	@StreamListener(BusinessAdviceStreamClient.INPUT)
-	public void process(AlarmMessage alarmMessage) {
-		log.info("consumer-4 receive business message : {}", alarmMessage.getAlarmItemCode());
+	public void process(AlarmMessage alarmMessage, @Header(AmqpHeaders.CHANNEL) Channel channel,
+            @Header(AmqpHeaders.DELIVERY_TAG) Long deliveryTag) {
+		log.info("consumer-1 receive business message : {}", alarmMessage.getAlarmItemCode());
 		
-//		try {
-//			Thread.sleep(5000000);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
 		//模拟业务处理（可能出现异常）
 		alarmMessage.getAlarmItemCode().charAt(0);
+		
+		//手动确认
+		try {
+			channel.basicAck(deliveryTag, false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
