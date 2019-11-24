@@ -45,7 +45,7 @@ public class BusinessAdviceReceiver {
 		// throw new ImmediateAcknowledgeAmqpException("Failed after 4
 		// attempts");
 
-		log.info("consumer-1 receive business message : {}, deliveryAttempt={}", alarmMessage.getAlarmItemCode(),
+		log.info("consumer-4 receive business message : {}, deliveryAttempt={}", alarmMessage.getAlarmItemCode(),
 				deliveryAttempt);
 
 		if (deliveryAttempt < maxAttempts) {

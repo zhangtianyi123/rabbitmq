@@ -567,6 +567,73 @@ spring cloud stream 默认会取key值的hashcode()值对instancecount取余，�
 	}
 ```
 
+直接取模hash则会导致在水平扩容的时候，消息可能不会被路由到之前的分区，所以采用一致性哈希算法保证绝大部分消息仍然发送到原来的分区
+
+```
+public class ConsistentHash {
+
+	private static SortedMap<Integer, String> sortedMap = new TreeMap<Integer, String>();
+
+	private static final int VIRTUAL_NODES = 10;
+	
+	static {
+	}
+	
+	public static void initNode(String exchange, int instanceCount) {
+		changeNode(exchange, instanceCount);
+	}
+	
+	public static void changeNode(String exchange, int instanceCount) {
+		for (int i = 0; i < instanceCount; i++) {
+			String routingKey = exchange + "-" + i;
+			for(int j=0; j<VIRTUAL_NODES; j++){
+                String virtualNodeName = routingKey + "&&VN" + String.valueOf(j);
+                int hash = getHash(virtualNodeName);
+                sortedMap.put(hash, virtualNodeName);
+            }
+		}
+	}
+
+    public static String getRoutingKey(String key) {  
+        int hash = getHash(key);  
+        //得到大于该Hash值的所有Map  
+        SortedMap<Integer, String> subMap = sortedMap.tailMap(hash);  
+        String virtualNode;
+        if(subMap.isEmpty()){  
+            //如果没有比该key的hash值大的，则从第一个node开始  
+            Integer i = sortedMap.firstKey();  
+            virtualNode =  sortedMap.get(i);  
+        }else{  
+            //第一个Key就是顺时针过去离node最近的那个结点  
+            Integer i = subMap.firstKey();  
+            virtualNode = subMap.get(i);  
+        }  
+        
+        if(StringUtils.isNotBlank(virtualNode)){
+            return virtualNode.substring(0, virtualNode.indexOf("&&"));
+        }
+        return null;
+    }
+    
+	private static int getHash(String str) {
+		final int p = 16777619;
+		int hash = (int) 2166136261L;
+		for (int i = 0; i < str.length(); i++)
+			hash = (hash ^ str.charAt(i)) * p;
+		hash += hash << 13;
+		hash ^= hash >> 7;
+		hash += hash << 3;
+		hash ^= hash >> 17;
+		hash += hash << 5;
+ 
+		// 如果算出来的值为负数则取其绝对值
+		if (hash < 0)
+			hash = Math.abs(hash);
+		return hash;
+	}
+}
+```
+
 
 - 消息确认（ACK机制）
 
@@ -646,8 +713,6 @@ spring.cloud.stream.bindings.inputBusinessAdvice.consumer.maxAttempts=5
 		}
 	}
 ```
-
-
 
 
   [1]: http://static.zybuluo.com/zhangtianyi/u3v6v65fq2z4bk7ml38wdc5o/image_1dltqpsj61g961i6v1hb26edmj39.png

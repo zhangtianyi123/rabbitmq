@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import zty.practise.cloudrabbit.model.AlarmMessage;
+import zty.practise.cloudrabbit.util.ConsistentHash;
 
 /**
  * 模拟第三方的发送方
@@ -28,19 +29,19 @@ public class ProduceService {
 	/**
 	 * 自动模拟第三方定时发送，不发送时注释
 	 */
-//	@Scheduled(fixedRate = 3000)
-//	public void send() {
-//		String exchange = "businessAdviceDestination";
-//		int instanceCount = 4;
-//		
-//		String key = data[new Random().nextInt(data.length)];
-//		AlarmMessage alarmMessage = new AlarmMessage();
-//		alarmMessage.setAlarmItemCode(key);
-//		alarmMessage.setAlarmMessageIdentifier(1L);
-//		
-//		System.out.println("Sending: " + key + " = "+ key.hashCode() + "=" + getRoutingKeyByHash(exchange, instanceCount, key));
+	@Scheduled(fixedRate = 3000)
+	public void send() {
+		String exchange = "businessAdviceDestination";
+		int instanceCount = 4;
+		
+		String key = data[new Random().nextInt(data.length)];
+		AlarmMessage alarmMessage = new AlarmMessage();
+		alarmMessage.setAlarmItemCode(key);
+		alarmMessage.setAlarmMessageIdentifier(1L);
+		
 //		this.rabbitTemplate.convertAndSend(exchange, getRoutingKeyByHash(exchange, instanceCount, key), alarmMessage);
-//	}
+		this.rabbitTemplate.convertAndSend(exchange, getRoutingKeyByConsistentHash(exchange, instanceCount, key), alarmMessage);
+	}
 	
 	/**
 	 * 普通的哈希算法确定分区，默认exchange-0
@@ -59,5 +60,18 @@ public class ProduceService {
 		routingKey = routingKey + "-" + mod;
 		
 		return routingKey;
+	}
+	
+	/**
+	 * 一致性哈希算法确定分区
+	 * @param exchange
+	 * @param instanceCount
+	 * @param key
+	 * @return
+	 */
+	private String getRoutingKeyByConsistentHash(String exchange, int instanceCount, String key) {
+		ConsistentHash.initNode(exchange, instanceCount);
+		System.out.println("key:" + key + ", 确定分区:" + ConsistentHash.getRoutingKey(key));
+		return ConsistentHash.getRoutingKey(key);
 	}
 }

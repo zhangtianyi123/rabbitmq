@@ -1,5 +1,5 @@
 server:
-  port: 8011
+  port: 8014
 
 management:
   endpoints:
@@ -37,7 +37,7 @@ spring:
             # 最多尝试处理几次，默认3	
             maxAttempts: 5
             partitioned: true
-            instance-index: 0
+            instance-index: 3
       rabbit:
         bindings:
           inputBusinessAdvice:
@@ -56,5 +56,6 @@ spring:
     username: zhangtianyi
     password: zhangtianyi
     virtual-host: vhost_test01
-
+    #publisher-confirms: true
+    #publisher-returns: true
       

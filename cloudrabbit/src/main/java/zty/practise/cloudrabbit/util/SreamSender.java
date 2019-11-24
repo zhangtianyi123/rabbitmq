@@ -53,6 +53,6 @@ public class SreamSender {
 	}
 	
 	public void sendPartitionAlarmMessageTo0(Object alarmMessage) {
-		boolean b = businessAdviceStreamClient.output().send(MessageBuilder.withPayload(alarmMessage).setHeader("partitionKey", "ddd").build());
+		boolean b = businessAdviceStreamClient.output().send(MessageBuilder.withPayload(alarmMessage).setHeader("partitionKey", "ccc").build());
 	}
 }
