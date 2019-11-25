@@ -634,6 +634,42 @@ public class ConsistentHash {
 }
 ```
 
+通过HTTP API 获取绑定数，从而动态的设置生产者的分区
+
+```
+public int getInstanceCount() {
+		RestTemplate restTemplate = new RestTemplate();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+
+		MultiValueMap<String, String> parameters = new LinkedMultiValueMap<String, String>();
+
+		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<MultiValueMap<String, String>>(parameters,
+				headers);
+
+		restTemplate.getInterceptors().add(new BasicAuthorizationInterceptor("wuhanalarm", "alarm!123"));
+
+		String jsonString = restTemplate
+				.exchange("http://220.249.91.186:15672/api/exchanges/%2F/requestBufferDestination/bindings/source",
+						HttpMethod.GET, entity, String.class)
+				.getBody();
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		JsonNode arrNode = null;
+		try {
+			arrNode = mapper.readTree(jsonString);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println(arrNode.size());
+		return arrNode.size();
+	}
+
+```
+
 
 - 消息确认（ACK机制）
 

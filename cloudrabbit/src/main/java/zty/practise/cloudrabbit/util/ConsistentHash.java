@@ -20,7 +20,7 @@ public class ConsistentHash {
 
 	private static SortedMap<Integer, String> sortedMap = new TreeMap<Integer, String>();
 
-	private static final int VIRTUAL_NODES = 10;
+	private static final int VIRTUAL_NODES = 15;
 	
 	static {
 	}
